@@ -1,98 +1,49 @@
 namespace Nullspace {
 	template <typename T, int R, int C>
 	Matrix<T, R, C>::Matrix()
-	{
-		m_nrow = 1;
-		m_ncol = 1;
-		m_nElements = 1;
-
-		m_matrixData = std::vector<T>(m_nElements);
-		m_matrixData[0] = T(0);
-	}
-
-	template <typename T, int R, int C>
-	Matrix<T, R, C>::Matrix(int nrow, int ncol)
-	{
-		m_nrow = nrow;
-		m_ncol = ncol;
-		m_nElements = nrow * ncol;
-
-		m_matrixData = std::vector<T>(m_nElements);
-		for (int i = 0; i < m_nElements; i++)
-			m_matrixData[i] = T(0);
-	}
-
-	template <typename T, int R, int C>
-	Matrix<T, R, C>::Matrix(int nrow, int ncol, const T *data)
-	{
-		m_nrow = nrow;
-		m_ncol = ncol;
-		m_nElements = nrow * ncol;
-
-		m_matrixData = std::vector<T>(m_nElements);
-		for (int i = 0; i < m_nElements; i++)
-			m_matrixData[i] = data[i];
-	}
+		: m_row(R), m_col(C), m_elements(m_row * m_col),
+		m_data(R * C, T{}) { }
 
 	template <typename T, int R, int C>
 	Matrix<T, R, C>::Matrix(const Matrix<T, R, C>& inputMatrix)
 	{
-		m_nrow = inputMatrix.m_nrow;
-		m_ncol = inputMatrix.m_ncol;
-		m_nElements = m_nrow * m_ncol;
-		m_matrixData = std::vector<T>(m_nElements);
+		m_row = inputMatrix.m_row;
+		m_col = inputMatrix.m_col;
+		m_elements = m_row * m_col;
+		m_data = std::vector<T>(m_elements);
 
-		for (int i = 0; i < m_nElements; i++)
-			m_matrixData[i] = inputMatrix.m_matrixData[i];
-
-	}
-
-	template <typename T, int R, int C>
-	Matrix<T, R, C>::Matrix(int nrow, int ncol, std::initializer_list<T> list)
-	{
-		m_nrow = nrow;
-		m_ncol = ncol;
-		m_nElements = nrow * ncol;
-		m_matrixData = std::vector<T>(m_nElements);
-
-		int i = 0;
-		for (auto& val : list) {
-			if (i < m_nElements)
-				m_matrixData[i++] = val;
-			else
-				break;
-		}
-		for (; i < m_nElements; i++) {
-			m_matrixData[i] = T(0);
-		}
+		for (int i = 0; i < m_elements; i++)
+			m_data[i] = inputMatrix.m_data[i];
 	}
 
 	template <typename T, int R, int C>
 	Matrix<T, R, C>::Matrix(T num)
+		: m_row(R), m_col(C), m_elements(m_row * m_col),
+		m_data(R * C, T{})
 	{
-		m_matrixData = std::vector<T>(m_nElements);
-		for (int i = 0; i < m_nrow; i++) {
-			for (int j = 0; j < m_ncol; j++) {
+		for (int i = 0; i < m_row; i++) {
+			for (int j = 0; j < m_col; j++) {
 				int linearIndex = Sub2Ind(i, j);
-				// if (i == j)
-				m_matrixData[linearIndex] = T(num);
+				if (i == j)
+					m_data[linearIndex] = T(num);
 			}
 		}
 	}
 
 	template <typename T, int R, int C>
 	Matrix<T, R, C>::Matrix(std::initializer_list<T> list)
+		: m_row(R), m_col(C), m_elements(m_row * m_col),
+		m_data(R * C, T{})
 	{
-		m_matrixData = std::vector<T>(m_nElements);
 		int i = 0;
 		for (auto& val : list) {
-			if (i < m_nElements)
-				m_matrixData[i++] = val;
+			if (i < m_elements)
+				m_data[i++] = val;
 			else
 				break;
 		}
-		for (; i < m_nElements; i++) {
-			m_matrixData[i] = T(0);
+		for (; i < m_elements; i++) {
+			m_data[i] = T(0);
 		}
 	}
 
@@ -102,13 +53,15 @@ namespace Nullspace {
 	}
 
 	template <typename T, int R, int C>
-	bool Matrix<T, R, C>::Resize(int nrow, int ncol)
+	bool Matrix<T, R, C>::Resize(int row, int col)
 	{
-		m_nrow = nrow;
-		m_ncol = ncol;
-		m_nElements = m_nrow * m_ncol;
+		if constexpr (R != Dynamic || C != Dynamic)
+			throw std::out_of_range("Static Matrix cannot be resized");
+		m_row = row;
+		m_col = col;
+		m_elements = m_row * m_col;
 
-		m_matrixData.resize(m_nElements);
+		m_data.resize(m_elements);
 		return true;
 	}
 
@@ -117,7 +70,7 @@ namespace Nullspace {
 	{
 		int linearIndex = Sub2Ind(row, col);
 		if (linearIndex >= 0)
-			return m_matrixData[linearIndex];
+			return m_data[linearIndex];
 		return T{};
 	}
 
@@ -125,23 +78,23 @@ namespace Nullspace {
 	bool Matrix<T, R, C>::SetElement(int row, int col, T elementValue)
 	{
 		int linearIndex = Sub2Ind(row, col);
-		if (row >= m_nrow || col >= m_ncol) {
+		if (row >= m_row || col >= m_col) {
 			return false;
 		}
-		m_matrixData[linearIndex] = elementValue;
+		m_data[linearIndex] = elementValue;
 		return true;
 	}
 
 	template <typename T, int R, int C>
 	int Matrix<T, R, C>::GetNumRows() const
 	{
-		return m_nrow;
+		return m_row;
 	}
 
 	template <typename T, int R, int C>
 	int Matrix<T, R, C>::GetNumCols() const
 	{
-		return m_ncol;
+		return m_col;
 	}
 
 	template <typename T, int R, int C>
@@ -150,11 +103,11 @@ namespace Nullspace {
 		if (R != C)
 			throw std::out_of_range("Row and Column are not equal");
 		Matrix<T, R, C> result(0);
-		for (int i = 0; i < result.m_nrow; i++) {
-			for (int j = 0; j < result.m_ncol; j++) {
+		for (int i = 0; i < result.m_row; i++) {
+			for (int j = 0; j < result.m_col; j++) {
 				int linearIndex = result.Sub2Ind(i, j);
 				if (i == j)
-					result.m_matrixData[linearIndex] = T(1);
+					result.m_data[linearIndex] = T(1);
 			}
 		}
 		return result;
@@ -164,8 +117,8 @@ namespace Nullspace {
 	const Matrix<T, R, C> Matrix<T, R, C>::Constant(T constant)
 	{
 		Matrix<T, R, C> result(0);
-		for (int i = 0; i < result.m_nElements; i++) {
-				result.m_matrixData[i] = constant;
+		for (int i = 0; i < result.m_elements; i++) {
+				result.m_data[i] = constant;
 		}
 		return result;
 	}
@@ -201,9 +154,9 @@ namespace Nullspace {
 	bool operator==(const Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs)
 	{
 		int result = 1;
-		if (lhs.m_nrow == rhs.m_nrow && lhs.m_ncol == rhs.m_ncol) {
-			for (int i = 0; i < lhs.m_nElements; i++) {
-				if (lhs.m_matrixData[i] == rhs.m_matrixData[i]) {
+		if (lhs.m_row == rhs.m_row && lhs.m_col == rhs.m_col) {
+			for (int i = 0; i < lhs.m_elements; i++) {
+				if (lhs.m_data[i] == rhs.m_data[i]) {
 					result = result && 1;
 				}
 				else
@@ -218,38 +171,54 @@ namespace Nullspace {
 	}
 
 	template <typename T, int R, int C>
-	T& Matrix<T, R, C>::operator()(int nrow, int ncol)
+	T& Matrix<T, R, C>::operator[](int linearindex)
 	{
-		int linearIndex = Sub2Ind(nrow, ncol);
-		if (linearIndex < 0)
+		if (linearindex < 0)
 			throw std::out_of_range("Matrix index out of bounds");
-		return m_matrixData[linearIndex];
+		return m_data[linearindex];
 	}
 
 	template <typename T, int R, int C>
-	const T& Matrix<T, R, C>::operator()(int nrow, int ncol) const
+	const T& Matrix<T, R, C>::operator[](int linearindex) const
 	{
-		int linearIndex = Sub2Ind(nrow, ncol);
+		if (linearindex < 0)
+			throw std::out_of_range("Matrix index out of bounds");
+		return m_data[linearindex];
+	}
+
+	template <typename T, int R, int C>
+	T& Matrix<T, R, C>::operator()(int row, int col)
+	{
+		int linearIndex = Sub2Ind(row, col);
 		if (linearIndex < 0)
 			throw std::out_of_range("Matrix index out of bounds");
-		return m_matrixData[linearIndex];
+		return m_data[linearIndex];
+	}
+
+	template <typename T, int R, int C>
+	const T& Matrix<T, R, C>::operator()(int row, int col) const
+	{
+		int linearIndex = Sub2Ind(row, col);
+		if (linearIndex < 0)
+			throw std::out_of_range("Matrix index out of bounds");
+		return m_data[linearIndex];
 	}
 
 	template <typename T, int R, int C>
 	std::ostream& operator<<(std::ostream& os, const Matrix<T, R, C>& m)
 	{
 		os << "[";
-		for (int i = 0; i < m.m_nrow; i++) {
+		for (int i = 0; i < m.m_row; i++) {
 			os << "[";
-			for (int j = 0; j < m.m_ncol; j++) {
-				T element = m.GetElement(i, j);
-				if (j == m.m_ncol - 1)
+			for (int j = 0; j < m.m_col; j++) {
+				T element = m(i, j);
+				if (j == m.m_col - 1)
 					os << element;
 				else
 					os << element << ", ";
 			}
 			os << "]";
-			if (i != m.m_nrow - 1)
+			if (i != m.m_row - 1)
 				os << ", ";
 		}
 		os << "]";
@@ -259,10 +228,10 @@ namespace Nullspace {
 	template <typename T, int R, int C>
 	Matrix<T, R, C> operator+(const Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs)
 	{
-		Matrix<T, R, C> result(lhs.m_nrow, lhs.m_ncol);
-		if (lhs.m_nrow == rhs.m_nrow && lhs.m_ncol == rhs.m_ncol) {
-			for (int i = 0; i < lhs.m_nElements; i++) {
-				result.m_matrixData[i] = lhs.m_matrixData[i] + rhs.m_matrixData[i];
+		Matrix<T, R, C> result(lhs.m_row, lhs.m_col);
+		if (lhs.m_row == rhs.m_row && lhs.m_col == rhs.m_col) {
+			for (int i = 0; i < lhs.m_elements; i++) {
+				result.m_data[i] = lhs.m_data[i] + rhs.m_data[i];
 			}
 		}
 		else
@@ -273,10 +242,10 @@ namespace Nullspace {
 	template <typename T, int R, int C>
 	Matrix<T, R, C> operator-(const Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs)
 	{
-		Matrix<T, R, C> result(lhs.m_nrow, lhs.m_ncol);
-		if (lhs.m_nrow == rhs.m_nrow && lhs.m_ncol == rhs.m_ncol) {
-			for (int i = 0; i < lhs.m_nElements; i++) {
-				result.m_matrixData[i] = lhs.m_matrixData[i] - rhs.m_matrixData[i];
+		Matrix<T, R, C> result;
+		if (lhs.m_row == rhs.m_row && lhs.m_col == rhs.m_col) {
+			for (int i = 0; i < lhs.m_elements; i++) {
+				result.m_data[i] = lhs.m_data[i] - rhs.m_data[i];
 			}
 		}
 		else
@@ -287,9 +256,9 @@ namespace Nullspace {
 	template <typename T, int R, int C>
 	Matrix<T, R, C> operator-(const Matrix<T, R, C>& lhs)
 	{
-		Matrix<T, R, C> result(lhs.m_nrow, lhs.m_ncol);
-		for (int i = 0; i < lhs.m_nElements; i++) {
-			result.m_matrixData[i] = T(-1) * lhs.m_matrixData[i];
+		Matrix<T, R, C> result;
+		for (int i = 0; i < lhs.m_elements; i++) {
+			result.m_data[i] = T(-1) * lhs.m_data[i];
 		}
 		return result;
 	}
@@ -310,44 +279,80 @@ namespace Nullspace {
 
 	template <typename T, int R, int C>
 	Matrix<T, R, C> operator*(const T& lhs, const Matrix<T, R, C>& rhs) {
-		Matrix<T, R, C> result(rhs.m_nrow, rhs.m_ncol);
+		Matrix<T, R, C> result;
 		if (lhs == T(0))
 			return result;
 
-		for (int i = 0; i < rhs.m_nElements; i++) {
-			result.m_matrixData[i] = lhs * rhs.m_matrixData[i];
+		for (int i = 0; i < rhs.m_elements; i++) {
+			result.m_data[i] = lhs * rhs.m_data[i];
 		}
 		return result;
 	}
 
 	template <typename T, int R, int C>
 	Matrix<T, R, C> operator*(const Matrix<T, R, C>& lhs, const T& rhs) {
-		Matrix<T, R, C> result(lhs.m_nrow, lhs.m_ncol);
+		Matrix<T, R, C> result;
 		if (rhs == T(0))
 			return result;
 
-		for (int i = 0; i < lhs.m_nElements; i++) {
-			result.m_matrixData[i] = rhs * lhs.m_matrixData[i];
+		for (int i = 0; i < lhs.m_elements; i++) {
+			result.m_data[i] = rhs * lhs.m_data[i];
 		}
 		return result;
+	}
+
+	template <typename T, int N, int C>
+	Vector<T, C> operator*(const Matrix<T, C, N>& lhs, const Vector<T, N>& rhs)
+	{
+		Vector<T, C> result;
+		for (int i = 0; i < C; i++) {
+			for (int j = 0; j < N; j++) {
+				result[i] += lhs(i, j) * rhs[j];
+			}
+		}
+		return result;
+	}
+
+	template <typename T, int R, int C>
+	Matrix<T, C, R> Matrix<T, R, C>::Transpose() const
+	{
+		Matrix<T, C, R> result(T(0));
+		for (int i = 0; i < m_row; i++) {
+			for (int j = 0; j < m_col; j++) {
+				result(j, i) = (* this)(i, j);
+			}
+		}
+		return result;
+	}
+
+	template <typename T, int R, int C>
+	bool Matrix<T, R, C>::IsSymmetric() const
+	{
+		return ((* this) == (* this).Transpose());
+	}
+
+	template <typename T, int R, int C>
+	bool Matrix<T, R, C>::IsSkewSymmetric() const
+	{
+		return ((* this) == -(* this).Transpose());
 	}
 
 	template <typename T, int R, int C>
 	void Matrix<T, R, C>::Print()
 	{
 		std::vector<std::string> formatted;
-		formatted.reserve(m_nrow * m_ncol);
+		formatted.reserve(m_row * m_col);
 
 		size_t maxWidth = 0;
 
-		for (int i = 0; i < m_nrow; ++i)
+		for (int i = 0; i < m_row; ++i)
 		{
-			for (int j = 0; j < m_ncol; ++j)
+			for (int j = 0; j < m_col; ++j)
 			{
 				int linearIndex = Sub2Ind(i, j);
 				std::ostringstream oss;
 				oss << std::fixed << std::setprecision(2)
-					<< m_matrixData[linearIndex];
+					<< m_data[linearIndex];
 
 				std::string s = oss.str();
 				maxWidth = std::max(maxWidth, s.size());
@@ -355,16 +360,16 @@ namespace Nullspace {
 			}
 		}
 
-		for (int i = 0; i < m_nrow; ++i)
+		for (int i = 0; i < m_row; ++i)
 		{
 			std::cout << "⎢ ";
 
-			for (int j = 0; j < m_ncol; ++j)
+			for (int j = 0; j < m_col; ++j)
 			{
 				std::cout << std::setw(maxWidth)
-						<< formatted[i * m_ncol + j];
+						<< formatted[i * m_col + j];
 
-				if (j != m_ncol - 1)
+				if (j != m_col - 1)
 					std::cout << " ";
 			}
 
@@ -375,8 +380,8 @@ namespace Nullspace {
 	template <typename T, int R, int C>
 	int Matrix<T, R, C>::Sub2Ind(int row, int col) const
 	{
-		if ((row < m_nrow) && (row >= 0) && (col < m_ncol) && (col >= 0)) {
-			return (row * m_ncol) + col;
+		if ((row < m_row) && (row >= 0) && (col < m_col) && (col >= 0)) {
+			return (row * m_col) + col;
 		}
 		else
 			return -1;

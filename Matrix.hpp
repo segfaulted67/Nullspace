@@ -9,28 +9,24 @@
 #include <algorithm>
 #include <stdexcept>
 
-
+#include "Constants.hpp"
+#include "Vector.hpp"
 
 namespace Nullspace {
 
 	constexpr int Dynamic = -1;
-	constexpr double PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679;
-	constexpr double e = 2.71828182845904523536028747135266249775724709369995;
 
-	template <typename T, int Rows = Dynamic, int Cols = Dynamic>
+	template <typename T, int Rows, int Cols>
 	class Matrix{
 	public:
 		Matrix();
-		Matrix(int nrow, int ncol);
-		Matrix(int nrow, int ncol, const T *data);
 		Matrix(const Matrix<T, Rows, Cols>& inputMatrix);
-		Matrix(int nrow, int ncol, std::initializer_list<T> list);
 		Matrix(T num);
 		Matrix(std::initializer_list<T> list);
 
 		~Matrix();
 
-		bool Resize(int nrow, int ncol);
+		bool Resize(int row, int col);
 
 		T GetElement(int row, int col) const;
 		bool SetElement(int row, int col, T elementValue);
@@ -43,9 +39,13 @@ namespace Nullspace {
 		Matrix<T, 1, Cols> Row(int r) const;
 		Matrix<T, Rows, 1> Column(int c) const;
 
-		T& operator()(int nrow, int ncol);
-		const T& operator()(int nrow, int ncol) const;
+		T& operator[](int linearindex);
+		const T& operator[](int linearindex) const;
+		T& operator()(int row, int col);
+		const T& operator()(int row, int col) const;
+
 		template <typename U, int R, int C> friend bool operator==(const Matrix<U, R, C>& lhs, const Matrix<U, R, C>& rhs);
+		template <typename U, int R, int C> friend bool operator!=(const Matrix<U, R, C>& lhs, const Matrix<U, R, C>& rhs);
 		template <typename U, int R, int C> friend std::ostream& operator<<(std::ostream& os, const Matrix<U, R, C>& m);
 
 		template <typename U, int R, int C> friend Matrix<U, R, C> operator-(const Matrix<U, R, C>& lhs);
@@ -55,13 +55,19 @@ namespace Nullspace {
 		template <typename U, int R, int C> friend Matrix<U, R, C> operator*(const U& lhs, const Matrix<U, R, C>& rhs);
 		template <typename U, int R, int C> friend Matrix<U, R, C> operator*(const Matrix<U, R, C>& lhs, const U& rhs);
 
+		template <typename U, int N, int C> friend Vector<U, C> operator*(const Matrix<U, C, N>& lhs, const Vector<U, N>& rhs);
+
+		Matrix<T, Cols, Rows> Transpose() const;
+		bool IsSymmetric() const;
+		bool IsSkewSymmetric() const;
+
 		void Print();
 
 	private:
 		int Sub2Ind(int row, int col) const;
 	private:
-		std::vector<T> m_matrixData;
-		int m_nrow = (Rows == Dynamic ? 0 : Rows), m_ncol = (Cols == Dynamic ? 0 : Cols), m_nElements = m_nrow * m_ncol;
+		std::vector<T> m_data;
+		int m_row, m_col, m_elements;
 	};
 }
 
