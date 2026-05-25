@@ -228,10 +228,10 @@ namespace Nullspace {
 	template <typename T, int R, int C>
 	Matrix<T, R, C> operator+(const Matrix<T, R, C>& lhs, const Matrix<T, R, C>& rhs)
 	{
-		Matrix<T, R, C> result(lhs.m_row, lhs.m_col);
+		Matrix<T, R, C> result;
 		if (lhs.m_row == rhs.m_row && lhs.m_col == rhs.m_col) {
 			for (int i = 0; i < lhs.m_elements; i++) {
-				result.m_data[i] = lhs.m_data[i] + rhs.m_data[i];
+				result[i] = lhs[i] + rhs[i];
 			}
 		}
 		else
@@ -245,7 +245,7 @@ namespace Nullspace {
 		Matrix<T, R, C> result;
 		if (lhs.m_row == rhs.m_row && lhs.m_col == rhs.m_col) {
 			for (int i = 0; i < lhs.m_elements; i++) {
-				result.m_data[i] = lhs.m_data[i] - rhs.m_data[i];
+				result[i] = lhs[i] - rhs[i];
 			}
 		}
 		else
@@ -258,7 +258,7 @@ namespace Nullspace {
 	{
 		Matrix<T, R, C> result;
 		for (int i = 0; i < lhs.m_elements; i++) {
-			result.m_data[i] = T(-1) * lhs.m_data[i];
+			result[i] = T(-1) * lhs[i];
 		}
 		return result;
 	}
@@ -284,7 +284,7 @@ namespace Nullspace {
 			return result;
 
 		for (int i = 0; i < rhs.m_elements; i++) {
-			result.m_data[i] = lhs * rhs.m_data[i];
+			result[i] = lhs * rhs[i];
 		}
 		return result;
 	}
@@ -296,7 +296,7 @@ namespace Nullspace {
 			return result;
 
 		for (int i = 0; i < lhs.m_elements; i++) {
-			result.m_data[i] = rhs * lhs.m_data[i];
+			result[i] = rhs * lhs[i];
 		}
 		return result;
 	}
